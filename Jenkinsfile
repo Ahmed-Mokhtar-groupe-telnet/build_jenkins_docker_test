@@ -1,19 +1,29 @@
-pipeline {
-  agent any
-  stages {
-  stage('Stage 1') {
-      steps {
-        script {
-          echo 'Stage 1'
-        }
-      }
+node {
+    def app
+
+    stage('Clone repository') {
+
+        checkout scm
     }
-  stage('Stage 2') {
-      steps {
-        script {
-          echo 'Stage 2'
-        }
-      }
+
+    stage('Build image') {
+
+        app = docker.build("getintodevops/hellonode")
     }
-  }
+
+    stage('Test image') {
+       
+
+        app.inside {
+            sh 'echo "Tests passed"'
+        }
+    }
+
+    stage('Push image') {
+       
+        docker.withRegistry('https://registry.hub.docker.com', 'docker-hub-credentials') {
+            app.push("${env.BUILD_NUMBER}")
+            app.push("latest")
+        }
+    }
 }
